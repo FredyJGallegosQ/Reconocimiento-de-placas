@@ -1,0 +1,80 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  background: #e4e4f4;
+  overflow: hidden;
+}
+
+.container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding-top: 30px;
+  z-index: 2;
+}
+
+.imgLogo {
+  position: absolute;
+  top: 50px; /* Ajusta el valor según tus necesidades */
+  right: 50px; /* Ajusta el valor según tus necesidades */
+  width: 400px; /* Ajusta según tus necesidades */
+  height: auto;
+}
+
+.footer {
+  font-size: 15px;
+}
+
+.quarter-circle {
+  position: absolute;
+  width: 700px; /* Tamaño del cuadrado */
+  height: 500px; /* Tamaño del cuadrado */
+  background-image: url('../assets/tricentenario.jpg'); /* Ruta a tu imagen en la carpeta assets */
+  background-size: cover; /* Asegura que la imagen cubra el área */
+  background-position: center; /* Centra la imagen en el div */
+  background-repeat: no-repeat; /* No repite la imagen */
+  border-radius: 0 0 100% 0; /* Redondea la esquina inferior derecha */
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  z-index: 1; /* Debe estar detrás del contenedor */
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 50px auto;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 350px;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 3; /* Asegúrate de que esté encima del cuarto de circunferencia */
+}
+
+.form-input {
+  width: 90%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.form-button {
+  width: 95%;
+  padding: 10px;
+  margin: 20px 0;
+  background-color: #cf2e2e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.form-button:hover {
+  background-color: #7b1523;
+}

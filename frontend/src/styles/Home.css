@@ -1,0 +1,163 @@
+/* Container for the whole page */
+div {
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Styles for the notes section */
+  .notes-section {
+    margin-bottom: 2rem;
+  }
+  
+  .notes-section h2 {
+    color: #333;
+    font-size: 24px;
+  }
+  
+  /* Styles for individual notes - assuming your Note component has some container element */
+  .note {
+    background-color: #f9f9f9;
+    border-left: 5px solid #007bff;
+    margin: 10px 0;
+    padding: 10px 15px;
+    border-radius: 5px;
+  }
+  
+  /* Styles for the form section */
+  form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: auto;
+  }
+  
+  form h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  form label {
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  
+  form input,
+  form textarea {
+    width: 100%;
+    padding: 8px;
+    margin: 8px 0 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  
+  form input[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  form input[type="submit"]:hover {
+    background-color: #0056b3;
+  }
+
+  /* ----------------------------- */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e4e4f4;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .left-header {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo {
+    width: 100px;
+    margin-right: 10px;
+  }
+  
+  .right-header {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logout-button {
+    margin-right: 10px;
+  }
+  
+  .unsaac-logo {
+    width: 300px;
+  }
+  
+  .nav {
+    display: flex;
+    margin-left: 50px;
+  }
+  
+  .nav button {
+    margin: 0 5px;
+    padding: 10px 10px;
+    font-size: 16px;
+    border: 1px solid #d3d3d3;
+    border-radius: 15px;
+    cursor: pointer;
+    background-color: #e4e4f4;
+  }
+  
+  .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px; /* Espacio alrededor del contenedor */
+    box-sizing: border-box;
+  }
+  
+  .box {
+    flex: 1;
+    margin: 10px; /* Espacio entre las cajas */
+    background-color: blue; /* Color de fondo para visualización */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2px; /* Espacio interno */
+    box-sizing: border-box;
+    height: 350px; /* Altura fija para las cajas */
+    position: relative;
+  }
+  
+  .video-box {
+    /* Asegura que el contenedor del video esté configurado correctamente */
+    position: relative;
+    height: 350px; /* Asegúrate de que esta altura sea suficiente */
+    overflow: hidden; /* Asegura que el video no se desborde del contenedor */
+  }
+  
+  .video-box video {
+    /* Asegura que el video ocupe todo el contenedor */
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ajusta el video para llenar el contenedor sin distorsionar */
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1; /* Asegura que el video esté en la capa superior si es necesario */
+  }
+  
+  
+  .footer {
+    text-align: center;
+    padding: 5px;
+    background-color: #f8f8f8;
+    border-top: 1px solid #ddd;
+  }
