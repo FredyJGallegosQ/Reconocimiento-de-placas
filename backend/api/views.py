@@ -1,67 +1,45 @@
-import json
-from django.shortcuts import render
-from django.contrib.auth.models import User
-from rest_framework import generics
-from .serializers import UserSerialazer, NoteSerialazer
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Note
-
-
-from aiortc import RTCPeerConnection, RTCSessionDescription
-from django.http import JsonResponse
-from .processing import process_frame
-import cv2
-
-
-class NoteListCreate(generics.ListCreateAPIView):
-    serializer_class = NoteSerialazer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        return Note.objects.filter(author = user)
-
-    def perform_create(self, serializer):
-        if serializer.is_valid():
-            serializer.save(author = self.request.user)
-        else:
-            print(serializer.errors)            
-
-class NoteDelete(generics.DestroyAPIView):
-    serializer_class = NoteSerialazer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        return Note.objects.filter(author = user)
+from django.contrib.auth import authenticate, login
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from .serializers import UserSerializer
+from .models import CustomUser
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import CustomTokenObtainPairSerializer
 
 class CreateUserView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerialazer
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
+class RegisterView(generics.CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Instancia del Peer Connection
-pc = RTCPeerConnection()
+class LoginView(generics.GenericAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
 
-@pc.on("track")
-def on_track(track):
-    if track.kind == "video":
-        @track.on("data")
-        def on_frame(frame):
-            img = frame.to_ndarray(format="bgr24")
-            processed_img = process_frame(img)
-            # Aquí puedes enviar processed_img a donde lo necesites
-            # Por ejemplo, guardar en el servidor, enviar a otro cliente, etc.
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
 
-async def offer(request):
-    params = json.loads(request.body)
-    offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
-    await pc.setRemoteDescription(offer)
-    answer = await pc.createAnswer()
-    await pc.setLocalDescription(answer)
-
-    return JsonResponse({
-        'sdp': pc.localDescription.sdp,
-        'type': pc.localDescription.type,
-    })
+        if user is not None:
+            login(request, user)
+            return Response({
+                "username": user.username,
+                "is_admin": user.is_admin,
+                "is_user": user.is_user
+            }, status=status.HTTP_200_OK)
+        return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+    
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

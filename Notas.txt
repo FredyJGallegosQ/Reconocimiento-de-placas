@@ -25,3 +25,6 @@ pip install aiohttp aiortc opencv-python
 --> ejecutar signal server
 python backend/signal_server.py
 
+--> crear super usuario Django
+python manage.py createsuperuser
+

@@ -115,6 +115,11 @@ div {
     background-color: #e4e4f4;
   }
   
+  .logout-container {
+    margin-left: auto; /* Empuja el contenedor del botón a la derecha */
+    margin-right: 20px;
+  }
+
   .container {
     display: flex;
     justify-content: space-between;

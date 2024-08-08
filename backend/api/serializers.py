@@ -1,21 +1,31 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Note
+from .models import CustomUser
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-class UserSerialazer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
     class Meta:
-        model = User
-        fields = ["id", "username", "password"]
-        extra_kwargs = {"password": {"write_only": True}}
-
+        model = CustomUser
+        fields = ["username", "password", "is_admin", "is_user"]
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
     def create(self, validate_data):
         print(validate_data)
-        user = User.objects.create_user(**validate_data)
+        password = validate_data.pop('password', None)
+        user = CustomUser(**validate_data)
+        if password:
+            user.set_password(password)
+        user.save()
         return user
-
-class NoteSerialazer(serializers.ModelSerializer):
-    class Meta:
-        model = Note
-        fields = ["id", "title", "content", "created_at", "author"]
-        extra_kwargs = {"author": {"read_only": True}}
         
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        # Agregar los campos adicionales
+        data.update({
+            'is_admin': self.user.is_admin,
+            'is_user': self.user.is_user,
+        })
+        
+        return data
