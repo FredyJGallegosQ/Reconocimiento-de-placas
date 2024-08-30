@@ -6,12 +6,11 @@ import "../styles/Form.css";
 import LoadingIndicator from "./LoadingIndicator";
 import logo from "../assets/unsaac_331.png";
 import { FaCircleUser } from "react-icons/fa6";
-import { jwtDecode } from "jwt-decode"; 
 
 function Form({ route, method }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isAdmin, setIsAdmin] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -32,13 +31,12 @@ function Form({ route, method }) {
         localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
         console.log(res);
         if (res.data.is_admin) {
-          console.log("ventana admin goooo")
           navigate("/admin");
         } else {
           navigate("/user");
         }
       } else {
-        navigate("/login");
+        navigate("/admin");
       }
     } catch (error) {
       alert(error);
@@ -75,13 +73,13 @@ function Form({ route, method }) {
             placeholder="Password"
           />
           {method === "register" && (
-            <label>
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={isAdmin}
                 onChange={(e) => setIsAdmin(e.target.checked)}
               />
-              Register as Admin
+              Administrador
             </label>
           )}
           {loading && <LoadingIndicator />}

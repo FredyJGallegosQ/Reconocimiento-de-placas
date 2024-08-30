@@ -28,3 +28,6 @@ python backend/signal_server.py
 --> crear super usuario Django
 python manage.py createsuperuser
 
+--> reconocimiento de placa
+pip install openalpr
+

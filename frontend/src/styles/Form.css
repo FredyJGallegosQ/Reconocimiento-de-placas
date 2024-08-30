@@ -78,3 +78,15 @@ body, html {
 .form-button:hover {
   background-color: #7b1523;
 }
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espacio entre el checkbox y el texto */
+  font-size: 16px; /* Ajusta el tamaño del texto si es necesario */
+  margin-top: 10px; /* Añade un margen superior si deseas separarlo de otros elementos */
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin: 0; /* Elimina cualquier margen que el navegador pueda aplicar por defecto */
+}

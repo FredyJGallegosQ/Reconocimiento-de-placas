@@ -1,0 +1,146 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #e4e4f4;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.left-header {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: 100px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.right-header {
+  display: flex;
+  align-items: center;
+}
+
+.logout-button {
+  margin-right: 10px;
+}
+
+.unsaac-logo {
+  width: 300px;
+}
+
+.nav {
+  display: flex;
+  margin-left: 50px;
+  margin-bottom: 10px;
+}
+
+.nav button {
+  margin: 0 5px;
+  padding: 10px 10px;
+  font-size: 16px;
+  border: 1px solid #d3d3d3;
+  border-radius: 15px;
+  cursor: pointer;
+  background-color: #e4e4f4;
+}
+
+.logout-container {
+  margin-left: auto; /* Empuja el contenedor del botón a la derecha */
+  margin-right: 20px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Estilos para el contenedor de la opción "live" */
+.live-container {
+  display: flex;
+  gap: 50px;
+  height: 350px;
+  width: 1200px;
+}
+
+.video-box {
+  flex: 1;
+  /* Asegúrate de que el video ocupe el 100% del contenedor */
+  width: 100%;
+  height: auto;
+}
+
+.video-box video {
+  width: 100%;
+  height: auto;
+}
+
+.table-box {
+  flex: 1;
+  overflow-x: auto; /* Permite el desplazamiento horizontal si la tabla es ancha */
+}
+
+.table-box table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-box th,
+.table-box td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+/* Estilos para el contenedor de la opción "report" */
+.report-container, .search-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.report-table {
+  overflow-x: auto; /* Permite el desplazamiento horizontal si la tabla es ancha */
+}
+
+.report-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report-table th,
+.report-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.export-button-container {
+  text-align: right;
+}
+
+.export-button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.export-button:hover {
+  background-color: #0056b3;
+}
+
+.active-button {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.466);
+  }
+.footer {
+  text-align: center;
+  padding: 5px;
+  background-color: #f8f8f8;
+  border-top: 1px solid #ddd;
+}
