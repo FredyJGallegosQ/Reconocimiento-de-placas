@@ -164,3 +164,23 @@ class RegisterPlateView(generics.CreateAPIView):
             self.perform_create(serializer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class RegisteredPlateListView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        plates = RegisteredPlate.objects.all()
+        serializer = RegisteredPlateSerializer(plates, many=True)
+        return Response(serializer.data)
+
+class DeletePlateView(APIView):
+    permission_classes = [AllowAny]
+    def delete(self, request, plate_number):
+        try:
+            plate = RegisteredPlate.objects.get(plate_number=plate_number)
+            plate.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except RegisteredPlate.DoesNotExist:
+            return Response({"error": "Plate not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": "An error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

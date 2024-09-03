@@ -4,11 +4,14 @@ import info from "../assets/InfoLogo.jpg";
 import unsaac331 from "../assets/unsaac_331.png";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import LiveCamera from "../components/LiveCamera";
+import axios from 'axios';
+import api from '../api';
 
 function Admin() {
   const [activeTab, setActiveTab] = useState("live");
   const videoRef = useRef(null);
   const [recognizedPlates, setRecognizedPlates] = useState([]);
+  const [registeredPlates, setRegisteredPlates] = useState([]);
   const handlePlatesRecognized = (plates) => {
     setRecognizedPlates(prevPlates => {
       // Aquí puedes filtrar placas duplicadas si es necesario
@@ -31,6 +34,26 @@ function Admin() {
         }
       };
       startVideo();
+    } else if (activeTab === "registered_plates") {
+      const fetchRegisteredPlates = async () => {
+        try {
+          const token = localStorage.getItem(ACCESS_TOKEN); // Cambia según dónde guardes tu token
+          const response = await axios.get('http://localhost:8000/api/registered_plates/', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          console.log(response.data); // Verifica que esto es un array
+          if (Array.isArray(response.data)) {
+            setRegisteredPlates(response.data);
+          } else {
+            console.error("La respuesta no es un array", response.data);
+          }
+        } catch (error) {
+          console.error("Error al obtener placas registradas", error);
+        }
+      };
+      fetchRegisteredPlates();
     }
   }, [activeTab]);
   const renderContent = () => {
@@ -46,7 +69,7 @@ function Admin() {
               <table>
                 <thead>
                   <tr>
-                    <th>Item</th>
+                    <th>Nro</th>
                     <th>Placa</th>
                     <th>Nombre</th>
                     <th>Cargo</th>
@@ -75,6 +98,7 @@ function Admin() {
               <table>
                 <thead>
                   <tr>
+                    <th>Nro</th>
                     <th>Placa</th>
                     <th>Nombre</th>
                     <th>Apellido</th>
@@ -86,7 +110,8 @@ function Admin() {
                 </thead>
                 <tbody>
                 {recognizedPlates.map((plate, index) => (
-                    <tr>
+                    <tr key={index}>
+                      <td>{index + 1}</td>
                       <td>{plate.plate_number}</td>
                       <td>{plate.name}</td>
                       <td>{plate.last_name}</td>
@@ -106,30 +131,39 @@ function Admin() {
         );
       case "registered_plates":
         return (
-          <div className="search-container">
-            <h2>Placas registradas</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Placa</th>
-                  <th>Nombre</th>
-                  <th>Apellido</th>
-                  <th>Cargo</th>
-                  <th>Fecha</th>
-                  <th>Hora</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>XYZ789</td>
-                  <td>Fredy</td>
-                  <td>Gallegos</td>
-                  <td>Alumno</td>
-                  <td>2024-08-09</td>
-                  <td>14:30</td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="registered-plates-container">
+            <div className="registered-plate-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nro</th>
+                    <th>Placa</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Cargo</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {registeredPlates.map((plate, index) => (
+                    <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>{plate.plate_number}</td>
+                      <td>{plate.name}</td>
+                      <td>{plate.last_name}</td>
+                      <td>{plate.occupation}</td>
+                      <td>{new Date(plate.registered_at).toLocaleDateString()}</td>
+                      <td>{new Date(plate.registered_at).toLocaleTimeString()}</td>
+                      <td>
+                      <button onClick={() => handleDeletePlate(plate.plate_number)}>Eliminar</button>
+                    </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         );
       case "personal_registered":
@@ -156,6 +190,17 @@ function Admin() {
   const handleRegisterPlate = () => {
     window.location.href = "/register_plate";
   };
+  const handleDeletePlate = async (plateNumber) => {
+    try {
+        const response = await axios.delete(`http://localhost:8000/api/delete_plate/${plateNumber}/`);
+        console.log("Plate deleted successfully", response);
+        // Actualizar el estado local para reflejar el cambio
+        setRegisteredPlates(prevPlates => prevPlates.filter(plate => plate.plate_number !== plateNumber));
+    } catch (error) {
+        console.error("Error deleting plate:", error);
+    }
+  };
+  
   return (
     <div>
       <header className="header">
