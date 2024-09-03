@@ -86,24 +86,21 @@
 .table-box table {
   width: 100%;
   border-collapse: collapse;
+  
 }
 
 .table-box th,
 .table-box td {
   border: 1px solid #ddd;
   padding: 8px;
-  text-align: left;
+  text-align: center;
 }
 
 /* Estilos para el contenedor de la opción "report" */
-.report-container, .search-container {
+.report-container{
   display: flex;
   flex-direction: column;
   gap: 20px;
-}
-
-.report-table {
-  overflow-x: auto; /* Permite el desplazamiento horizontal si la tabla es ancha */
 }
 
 .report-table table {
@@ -114,7 +111,9 @@
 .report-table th,
 .report-table td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 15px;
+  padding-left: 50px;
+  padding-right: 50px;
   text-align: left;
 }
 
@@ -138,6 +137,8 @@
 .active-button {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.466);
   }
+
+/* footer */
 .footer {
   text-align: center;
   padding: 5px;

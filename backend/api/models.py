@@ -21,3 +21,13 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+class RegisteredPlate(models.Model):
+    plate_number = models.CharField(max_length=7, unique=True)
+    name = models.CharField(max_length=40)
+    last_name = models.CharField(max_length=50)
+    occupation = models.CharField(max_length=50)
+    registered_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.plate_number

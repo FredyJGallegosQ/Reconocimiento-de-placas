@@ -2,18 +2,15 @@ from django.contrib.auth import authenticate, login
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from .serializers import UserSerializer
-from .models import CustomUser
+from .serializers import UserSerializer, CustomTokenObtainPairSerializer, RegisteredPlateSerializer
+from .models import CustomUser, RegisteredPlate
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import CustomTokenObtainPairSerializer
 from rest_framework.views import APIView
 import cv2
 import numpy as np
-from django.utils.datastructures import MultiValueDictKeyError
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-import os
-import time
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
 
 class CreateUserView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -68,15 +65,33 @@ class PlateRecognitionView(APIView):
             if frame is None:
                 return Response({"error": "Failed to decode frame"}, status=400)
             
-            # # Mostrar el frame en una ventana flotante
-            # cv2.imshow('Frame', frame)
-            # cv2.waitKey(10)  # Espera 0.1 segundos
-            # cv2.destroyWindow('Frame')  # Cierra la ventana
-
             plate_numbers = self.recognize_plate(frame)
-            
-            return Response({"plate_numbers": plate_numbers})
-        
+            print("Lista de placas -->", plate_numbers)
+
+            # Buscar placas registradas en la base de datos
+            registered_plates = RegisteredPlate.objects.filter(plate_number__in=plate_numbers)
+            registered_plate_dict = {plate.plate_number: plate for plate in registered_plates}
+            print("Placas registradas en la BD:", registered_plates)
+            print("Placas registradas dict:", registered_plate_dict)
+            # Preparar la respuesta
+            response_data = []
+            for plate_number in plate_numbers:
+                if plate_number in registered_plate_dict:
+                    print("se encontró la placa en la BD")
+                    plate_info = registered_plate_dict[plate_number]
+                    print("Información de la placa --> ", plate_info.name)
+                    response_data.append({
+                        'plate_number': plate_info.plate_number,
+                        'name': plate_info.name,
+                        'last_name': plate_info.last_name,
+                        'occupation': plate_info.occupation
+                    })
+            print("Responde data --> ", response_data)
+            if response_data:
+                return Response({"plate_numbers": response_data})
+            else:
+                return Response({"message": "No registered plates found"}, status=404)
+
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
@@ -135,8 +150,17 @@ class PlateRecognitionView(APIView):
                     gray_plate = cv2.cvtColor(placa, cv2.COLOR_BGR2GRAY)
                     custom_config = r'--oem 1 --psm 8 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-'
                     texto = pytesseract.image_to_string(gray_plate, config=custom_config)
-                    print("Placa -->", texto)
                     if len(texto) >= 7:
                         plate_numbers.append(texto.strip())
-        print("Lista de placas -->", plate_numbers)
         return plate_numbers
+    
+class RegisterPlateView(generics.CreateAPIView):
+    queryset = RegisteredPlate.objects.all()
+    serializer_class = RegisteredPlateSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

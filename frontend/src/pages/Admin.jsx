@@ -12,7 +12,7 @@ function Admin() {
   const handlePlatesRecognized = (plates) => {
     setRecognizedPlates(prevPlates => {
       // Aquí puedes filtrar placas duplicadas si es necesario
-      const newPlates = plates.filter(plate => !prevPlates.includes(plate));
+      const newPlates = plates.filter(plate => !prevPlates.some(p => p.plate_number === plate.plate_number));
       return [...prevPlates, ...newPlates];
     });
   };
@@ -48,8 +48,8 @@ function Admin() {
                   <tr>
                     <th>Item</th>
                     <th>Placa</th>
-                    <th>Nombre propietario</th>
-                    <th>Estado</th>
+                    <th>Nombre</th>
+                    <th>Cargo</th>
                     <th>Hora</th>
                   </tr>
                 </thead>
@@ -57,13 +57,10 @@ function Admin() {
                   {recognizedPlates.map((plate, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
-                      <td>{plate}</td>
-                      <td></td>{" "}
-                      {/* Aquí puedes agregar el nombre del propietario si lo tienes */}
-                      <td></td>{" "}
-                      {/* Aquí puedes agregar el estado si lo tienes */}
-                      <td>{new Date().toLocaleTimeString()}</td>{" "}
-                      {/* Hora actual */}
+                      <td>{plate.plate_number}</td>
+                      <td>{plate.name}</td>
+                      <td>{plate.occupation}</td>
+                      <td>{new Date().toLocaleTimeString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -79,25 +76,26 @@ function Admin() {
                 <thead>
                   <tr>
                     <th>Placa</th>
-                    <th>Nombre propietario</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
                     <th>Cargo</th>
-                    <th>Estado</th>
                     <th>Observación</th>
                     <th>Fecha</th>
                     <th>Hora</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Agrega las filas con los datos de la tabla aquí */}
-                  <tr>
-                    <td>XYZ789</td>
-                    <td>María García</td>
-                    <td>Empleado</td>
-                    <td>Permitido</td>
-                    <td>Ninguna</td>
-                    <td>2024-08-09</td>
-                    <td>14:30</td>
-                  </tr>
+                {recognizedPlates.map((plate, index) => (
+                    <tr>
+                      <td>{plate.plate_number}</td>
+                      <td>{plate.name}</td>
+                      <td>{plate.last_name}</td>
+                      <td>{plate.occupation}</td>
+                      <td></td>
+                      <td>{new Date().toLocaleDateString()}</td>
+                      <td>{new Date().toLocaleTimeString()}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -106,30 +104,40 @@ function Admin() {
             </div>
           </div>
         );
-      case "search":
+      case "registered_plates":
         return (
           <div className="search-container">
-            <h2>Búsqueda Personalizada</h2>
+            <h2>Placas registradas</h2>
             <table>
               <thead>
                 <tr>
                   <th>Placa</th>
+                  <th>Nombre</th>
+                  <th>Apellido</th>
+                  <th>Cargo</th>
                   <th>Fecha</th>
                   <th>Hora</th>
-                  <th>Resultado</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>XYZ789</td>
+                  <td>Fredy</td>
+                  <td>Gallegos</td>
+                  <td>Alumno</td>
                   <td>2024-08-09</td>
                   <td>14:30</td>
-                  <td>Permitido</td>
                 </tr>
               </tbody>
             </table>
           </div>
         );
+      case "personal_registered":
+        return(
+          <div>
+
+          </div>
+        )
       default:
         return null;
     }
@@ -144,6 +152,9 @@ function Admin() {
   };
   const handleRegister = () => {
     window.location.href = "/register";
+  };
+  const handleRegisterPlate = () => {
+    window.location.href = "/register_plate";
   };
   return (
     <div>
@@ -172,13 +183,22 @@ function Admin() {
           Reporte
         </button>
         <button
-          className={activeTab === "search" ? "active-button" : ""}
-          onClick={() => setActiveTab("search")}
+          className={activeTab === "registered_plates" ? "active-button" : ""}
+          onClick={() => setActiveTab("registered_plates")}
         >
-          Búsqueda personalizada
+          Placas Registradas
+        </button>
+        <button
+          className={activeTab === "personal_registered" ? "active-button" : ""}
+          onClick={() => setActiveTab("personal_registered")}
+        >
+          Personal Registrado
+        </button>
+        <button className="logout-button" onClick={handleRegisterPlate}>
+          Registrar Placa
         </button>
         <button className="logout-button" onClick={handleRegister}>
-          Registrar
+          Registrar Personal
         </button>
         <div className="logout-container">
           <button className="logout-button" onClick={handleLogout}>
@@ -186,7 +206,9 @@ function Admin() {
           </button>
         </div>
       </nav>
-      <div className="container">{renderContent()}</div>
+      <div className="container">
+        {renderContent()} 
+      </div>
       <footer className="footer">
         <p>© 2024 UNSAAC. Todos los derechos reservados.</p>
       </footer>
