@@ -177,6 +177,37 @@
   flex: 1;
   overflow-x: auto; /* Permite el desplazamiento horizontal si la tabla es ancha */
 }
+/* Registered users */
+.personal-registered-container {
+  height: 350px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.personal-registered-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.personal-registered-table th {
+  position: sticky;
+  top: 0; /* Fija la cabecera en la parte superior */
+  background-color: #a4beda; /* Opcional: establece el color de fondo para que no se mezcle con el contenido desplazado */
+  z-index: 1; /* Asegura que la cabecera esté por encima del contenido */
+  border-bottom: 2px solid #ddd; /* Opcional: agrega una línea divisoria */
+}
+.personal-registered-table th,
+.personal-registered-table td {
+  border: 1px solid #ddd;
+  padding: 5px;
+  padding-left: 40px;
+  padding-right: 40px;
+  text-align: center;
+}
+.personal-registered-table {
+  flex: 1;
+  overflow-x: auto; /* Permite el desplazamiento horizontal si la tabla es ancha */
+}
 /* footer */
 .footer {
   text-align: center;

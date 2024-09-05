@@ -5,13 +5,13 @@ import unsaac331 from "../assets/unsaac_331.png";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import LiveCamera from "../components/LiveCamera";
 import axios from 'axios';
-import api from '../api';
 
 function Admin() {
   const [activeTab, setActiveTab] = useState("live");
   const videoRef = useRef(null);
   const [recognizedPlates, setRecognizedPlates] = useState([]);
   const [registeredPlates, setRegisteredPlates] = useState([]);
+  const [users, setUsers] = useState([]);
   const handlePlatesRecognized = (plates) => {
     setRecognizedPlates(prevPlates => {
       // Aquí puedes filtrar placas duplicadas si es necesario
@@ -54,6 +54,21 @@ function Admin() {
         }
       };
       fetchRegisteredPlates();
+    } else if (activeTab === "personal_registered") {
+      const fetchUsers = async () => {
+        try {
+          const token = localStorage.getItem(ACCESS_TOKEN);
+          const response = await axios.get('http://localhost:8000/api/users/', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          setUsers(response.data);
+        } catch (error) {
+          console.error("Error al obtener usuarios", error);
+        }
+      };
+      fetchUsers();
     }
   }, [activeTab]);
   const renderContent = () => {
@@ -166,12 +181,33 @@ function Admin() {
             </div>
           </div>
         );
-      case "personal_registered":
-        return(
-          <div>
-
-          </div>
-        )
+        case "personal_registered":
+          return (
+            <div className="personal-registered-container">
+              <div className="personal-registered-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Usuario</th>
+                      <th>Admin</th>
+                      <th>Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user, index) => (
+                      <tr key={index}>
+                        <td>{user.username}</td>
+                        <td>{user.is_admin ? "Sí" : "No"}</td>
+                        <td>
+                          <button onClick={() => handleDeleteUser(user.username)}>Eliminar</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );        
       default:
         return null;
     }
@@ -200,7 +236,19 @@ function Admin() {
         console.error("Error deleting plate:", error);
     }
   };
-  
+  const handleDeleteUser = async (username) => {
+    try {
+      const token = localStorage.getItem(ACCESS_TOKEN);
+      await axios.delete(`http://localhost:8000/api/delete_user/${username}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setUsers(prevUsers => prevUsers.filter(user => user.username !== username));
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error);
+    }
+  };
   return (
     <div>
       <header className="header">

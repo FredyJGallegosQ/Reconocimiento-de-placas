@@ -184,3 +184,15 @@ class DeletePlateView(APIView):
         except Exception as e:
             return Response({"error": "An error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+# Vista para listar usuarios
+class UserListView(generics.ListAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+
+# Vista para eliminar un usuario
+class UserDeleteView(generics.DestroyAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'username'
+    permission_classes = [AllowAny]

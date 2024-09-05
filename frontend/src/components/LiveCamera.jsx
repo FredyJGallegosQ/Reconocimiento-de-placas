@@ -47,12 +47,17 @@ const LiveCamera = ({ onPlatesRecognized }) => {
 
       axios.post('/api/recognize_plate/', formData, { headers })
         .then(response => {
-          console.log("Response from backend:", response.data); // Verifica la respuesta
           const plates = response.data.plate_numbers; // Obtener la lista de placas
           onPlatesRecognized(plates);
           // setRecognizedPlates(prevPlates => [...prevPlates, ...plates]); // Agregar nuevas placas a la lista existente
         })
-        .catch(err => console.error("Error recognizing plate: ", err));
+        .catch(err => {
+          if (err.response && err.response.status === 404) {
+            //console.log("No plates detected (404)."); // Ignora el error 404 cuando no haya placas
+          } else {
+            console.error("Error recognizing plate: ", err); // Manejar otros errores
+          }
+        });
     }, 'image/jpeg');
   };
 
