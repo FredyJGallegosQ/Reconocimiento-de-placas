@@ -1,16 +1,17 @@
 from django.contrib.auth import authenticate, login
+from django.utils import timezone
+from datetime import timedelta
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from .serializers import UserSerializer, CustomTokenObtainPairSerializer, RegisteredPlateSerializer
-from .models import CustomUser, RegisteredPlate
+from .serializers import UserSerializer, CustomTokenObtainPairSerializer, RegisteredPlateSerializer, PlateRecognitionRecordSerializer
+from .models import CustomUser, RegisteredPlate, PlateRecognitionRecord
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 import cv2
 import numpy as np
 import pytesseract
 # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-
 
 class CreateUserView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -80,12 +81,30 @@ class PlateRecognitionView(APIView):
                     print("se encontró la placa en la BD")
                     plate_info = registered_plate_dict[plate_number]
                     print("Información de la placa --> ", plate_info.name)
-                    response_data.append({
-                        'plate_number': plate_info.plate_number,
-                        'name': plate_info.name,
-                        'last_name': plate_info.last_name,
-                        'occupation': plate_info.occupation
-                    })
+                    # Comprobar si la placa fue registrada en los últimos 5 minutos
+                    five_minutes_ago = timezone.now() - timedelta(minutes=5)
+                    recent_record = PlateRecognitionRecord.objects.filter(
+                        plate_number=plate_number,
+                        recognized_at__gte=five_minutes_ago
+                    ).exists()
+
+                    if not recent_record:
+                        # Guardar la información en la base de datos
+                        PlateRecognitionRecord.objects.create(
+                            plate_number=plate_info.plate_number,
+                            name=plate_info.name,
+                            last_name=plate_info.last_name,
+                            occupation=plate_info.occupation
+                        )
+                        response_data.append({
+                            'plate_number': plate_info.plate_number,
+                            'name': plate_info.name,
+                            'last_name': plate_info.last_name,
+                            'occupation': plate_info.occupation
+                        })
+                    else:
+                        print(f"La placa {plate_number} fue reconocida recientemente (últimos 5 minutos)")
+
             print("Responde data --> ", response_data)
             if response_data:
                 return Response({"plate_numbers": response_data})
@@ -196,3 +215,8 @@ class UserDeleteView(generics.DestroyAPIView):
     serializer_class = UserSerializer
     lookup_field = 'username'
     permission_classes = [AllowAny]
+
+class PlateRecognitionReportView(generics.ListAPIView):
+    permission_classes = [AllowAny]
+    queryset = PlateRecognitionRecord.objects.all()
+    serializer_class = PlateRecognitionRecordSerializer

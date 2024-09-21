@@ -31,3 +31,16 @@ class RegisteredPlate(models.Model):
 
     def __str__(self):
         return self.plate_number
+    
+class PlateRecognitionRecord(models.Model):
+    plate_number = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
+    occupation = models.CharField(max_length=255, blank=True)
+    recognized_at = models.DateTimeField(auto_now_add=True)  # Fecha y hora en que se reconoció la placa
+
+    class Meta:
+        ordering = ['-recognized_at']  # Ordenar por fecha y hora en orden descendente
+
+    def __str__(self):
+        return self.plate_number

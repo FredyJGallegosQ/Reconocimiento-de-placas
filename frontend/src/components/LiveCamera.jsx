@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import axios from '../api';
 
-const LiveCamera = ({ onPlatesRecognized }) => {
+const LiveCamera = () => {
   const videoRef = useRef(null);
   // const [recognizedPlates, setRecognizedPlates] = useState([]);
 
@@ -48,7 +48,7 @@ const LiveCamera = ({ onPlatesRecognized }) => {
       axios.post('/api/recognize_plate/', formData, { headers })
         .then(response => {
           const plates = response.data.plate_numbers; // Obtener la lista de placas
-          onPlatesRecognized(plates);
+          // onPlatesRecognized(plates);
           // setRecognizedPlates(prevPlates => [...prevPlates, ...plates]); // Agregar nuevas placas a la lista existente
         })
         .catch(err => {

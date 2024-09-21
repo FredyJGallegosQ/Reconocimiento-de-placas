@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, RegisteredPlate
+from .models import CustomUser, RegisteredPlate, PlateRecognitionRecord
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UserSerializer(serializers.ModelSerializer):
@@ -34,3 +34,8 @@ class RegisteredPlateSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegisteredPlate
         fields = '__all__'
+
+class PlateRecognitionRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlateRecognitionRecord
+        fields = ['plate_number', 'name', 'last_name', 'occupation', 'recognized_at']

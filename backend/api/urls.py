@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import RegisterView, LoginView, CustomTokenObtainPairView, PlateRecognitionView
 from .views import RegisterPlateView, RegisteredPlateListView, DeletePlateView, UserListView, UserDeleteView
+from .views import PlateRecognitionReportView
 
 
 urlpatterns = [
@@ -13,4 +14,6 @@ urlpatterns = [
     path('delete_plate/<str:plate_number>/', DeletePlateView.as_view(), name='delete_plate'),
     path('users/', UserListView.as_view(), name='user-list'),
     path('delete_user/<str:username>/', UserDeleteView.as_view(), name='user-delete'),
+    path('plate_report/', PlateRecognitionReportView.as_view(), name='plate_report'),
+
 ]
