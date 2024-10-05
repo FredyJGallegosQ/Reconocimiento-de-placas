@@ -8,6 +8,6 @@ class CustomUserAdmin(admin.ModelAdmin):
 
 @admin.register(RegisteredPlate)
 class RegisteredPlateAdmin(admin.ModelAdmin):
-    list_display = ('plate_number', 'name', 'last_name', 'occupation', 'registered_at')
+    list_display = ('plate_number', 'name', 'last_name', 'type', 'registered_at')
     search_fields = ('plate_number', 'name')
-    list_filter = ('occupation', 'registered_at')
+    list_filter = ('type', 'registered_at')

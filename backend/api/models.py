@@ -26,17 +26,28 @@ class RegisteredPlate(models.Model):
     plate_number = models.CharField(max_length=7, unique=True)
     name = models.CharField(max_length=40)
     last_name = models.CharField(max_length=50)
-    occupation = models.CharField(max_length=50)
+    type = models.CharField(max_length=50)  
+    dependence = models.CharField(max_length=100)  
+    voucher = models.CharField(max_length=100)  
+    model = models.CharField(max_length=100)  
+    color = models.CharField(max_length=30)  
+    phone = models.CharField(max_length=15)  
     registered_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.plate_number
+
     
 class PlateRecognitionRecord(models.Model):
     plate_number = models.CharField(max_length=255)
     name = models.CharField(max_length=255, blank=True)
     last_name = models.CharField(max_length=255, blank=True)
-    occupation = models.CharField(max_length=255, blank=True)
+    type = models.CharField(max_length=255, blank=True)
+    dependence = models.CharField(max_length=100)  
+    voucher = models.CharField(max_length=100)  
+    model = models.CharField(max_length=100)  
+    color = models.CharField(max_length=30)  
+    phone = models.CharField(max_length=15) 
     recognized_at = models.DateTimeField(auto_now_add=True)  # Fecha y hora en que se reconoció la placa
 
     class Meta:

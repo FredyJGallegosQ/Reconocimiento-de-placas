@@ -94,13 +94,13 @@ class PlateRecognitionView(APIView):
                             plate_number=plate_info.plate_number,
                             name=plate_info.name,
                             last_name=plate_info.last_name,
-                            occupation=plate_info.occupation
+                            type=plate_info.type
                         )
                         response_data.append({
                             'plate_number': plate_info.plate_number,
                             'name': plate_info.name,
                             'last_name': plate_info.last_name,
-                            'occupation': plate_info.occupation
+                            'type': plate_info.type
                         })
                     else:
                         print(f"La placa {plate_number} fue reconocida recientemente (últimos 5 minutos)")
@@ -176,7 +176,7 @@ class PlateRecognitionView(APIView):
 class RegisterPlateView(generics.CreateAPIView):
     queryset = RegisteredPlate.objects.all()
     serializer_class = RegisteredPlateSerializer
-
+    permission_classes = [AllowAny]
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():

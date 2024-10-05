@@ -56,7 +56,7 @@ function Admin() {
 
             return recordDateString === today; // Comparación
           });
-          console.log("placas de oy", recordsToday);
+          console.log("placas de hoy", recordsToday);
           setPlateRecords(recordsToday);
         } catch (error) {
           console.error(
@@ -149,9 +149,9 @@ function Admin() {
                 <thead>
                   <tr>
                     <th>Nro</th>
-                    <th>Placa</th>
                     <th>Nombre</th>
-                    <th>Cargo</th>
+                    <th>Tipo</th>
+                    <th>Placa</th>
                     <th>Hora</th>
                   </tr>
                 </thead>
@@ -159,9 +159,9 @@ function Admin() {
                   {plateRecords.map((record, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
-                      <td>{record.plate_number}</td>
                       <td>{record.name}</td>
-                      <td>{record.occupation}</td>
+                      <td>{record.type}</td>
+                      <td>{record.plate_number}</td>
                       <td>
                         {new Date(record.recognized_at).toLocaleTimeString()}
                       </td>
@@ -208,7 +208,7 @@ function Admin() {
                           <td>{record.plate_number}</td>
                           <td>{record.name}</td>
                           <td>{record.last_name}</td>
-                          <td>{record.occupation}</td>
+                          <td>{record.type}</td>
                           <td>{record.observation || ""}</td>
                           <td>{formattedDate}</td>
                           <td>{formattedTime}</td>
@@ -259,7 +259,7 @@ function Admin() {
                       <td>{plate.plate_number}</td>
                       <td>{plate.name}</td>
                       <td>{plate.last_name}</td>
-                      <td>{plate.occupation}</td>
+                      <td>{plate.type}</td>
                       <td>
                         {new Date(plate.registered_at).toLocaleDateString()}
                       </td>

@@ -94,7 +94,7 @@ function User() {
                       <td>{index + 1}</td>
                       <td>{record.plate_number}</td>
                       <td>{record.name}</td>
-                      <td>{record.occupation}</td>
+                      <td>{record.type}</td>
                       <td>
                         {new Date(record.recognized_at).toLocaleTimeString()}
                       </td>

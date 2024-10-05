@@ -38,4 +38,4 @@ class RegisteredPlateSerializer(serializers.ModelSerializer):
 class PlateRecognitionRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = PlateRecognitionRecord
-        fields = ['plate_number', 'name', 'last_name', 'occupation', 'recognized_at']
+        fields = ['plate_number', 'name', 'last_name', 'type', 'recognized_at']

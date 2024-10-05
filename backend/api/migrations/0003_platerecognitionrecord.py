@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 ('plate_number', models.CharField(max_length=255)),
                 ('name', models.CharField(blank=True, max_length=255)),
                 ('last_name', models.CharField(blank=True, max_length=255)),
-                ('occupation', models.CharField(blank=True, max_length=255)),
+                ('type', models.CharField(blank=True, max_length=255)),
                 ('recognized_at', models.DateTimeField(auto_now_add=True)),
             ],
             options={
