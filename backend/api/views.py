@@ -121,56 +121,56 @@ class PlateRecognitionView(APIView):
         al, an, c = frame.shape
 
         # Centro de la imagen
-        x1 = int(an / 3)
-        x2 = int(x1 * 2)
+        x1 = int(an / 4)
+        x2 = int(3 * an / 4)
 
-        y1 = int(al / 3)
-        y2 = int(y1 * 2)
+        y1 = int(al / 1.5)
+        y2 = al
 
         # Recorte de zona extraida
         recorte = frame[y1:y2, x1:x2]
 
-        # Preparaación de zona de interés
-        nB = np.matrix(recorte[:, :, 0])
-        nG = np.matrix(recorte[:, :, 1])
-        nR = np.matrix(recorte[:, :, 2])
+        hsv_recorte = cv2.cvtColor(recorte, cv2.COLOR_BGR2HSV)
 
-        # Color
-        Color = cv2.absdiff(nG, nB)
+        # Rango de colores para amarillo, blanco y celeste
+        masks = [
+            cv2.inRange(hsv_recorte, np.array([20, 100, 100]), np.array([30, 255, 255])), # Amarillo
+            cv2.inRange(hsv_recorte, np.array([0, 0, 200]), np.array([180, 25, 255])),   # Blanco
+            cv2.inRange(hsv_recorte, np.array([85, 100, 100]), np.array([95, 255, 255])) # Celeste
+        ]
+        
+        combined_mask = cv2.bitwise_or(masks[0], masks[1])
+        combined_mask = cv2.bitwise_or(combined_mask, masks[2])
 
-        # Binarizamos la imagen
-        _, umbral = cv2.threshold(Color, 40, 255, cv2.THRESH_BINARY)
-
-        # Extraemos contornos zona seleccionada
-        contornos, _ = cv2.findContours(umbral, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-        # Ordenamos de grande a pequeño
-        contornos = sorted(contornos, key = lambda x: cv2.contourArea(x), reverse=True)
+        contornos, _ = cv2.findContours(combined_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contornos = sorted(contornos, key=lambda x: cv2.contourArea(x), reverse=True)
 
         # Dibuja contorno extraido
         for contorno in contornos:
             area = cv2.contourArea(contorno)
-            if area > 500 and area < 5000:
-                # Detecta la placa
+            if 200 < area < 5000:
                 x, y, ancho, alto = cv2.boundingRect(contorno)
-
-                # Extracción de coordenadas
-                xpi = x + x1
-                ypi = y + y1
-
-                xpf = x + ancho + x1
-                ypf = y + alto + y1
-
-                # Extraer pixeles
+                xpi, ypi = x + x1, y + y1
+                xpf, ypf = x + ancho + x1, y + alto + y1
                 placa = frame[ypi:ypf, xpi:xpf]
 
-                # Asegurar de tener un buen tamaño de placa
                 if placa.shape[0] >= 30 and placa.shape[1] >= 50:
-                    gray_plate = cv2.cvtColor(placa, cv2.COLOR_BGR2GRAY)
-                    custom_config = r'--oem 1 --psm 8 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-'
+                    kernel = np.ones((3, 3), np.uint8)
+                    plate_processed = cv2.dilate(placa, kernel, iterations=1)
+                    plate_processed = cv2.erode(plate_processed, kernel, iterations=1)
+                    gray_plate = cv2.cvtColor(plate_processed, cv2.COLOR_BGR2GRAY)
+
+                    custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789-'
                     texto = pytesseract.image_to_string(gray_plate, config=custom_config)
-                    if len(texto) >= 7:
-                        plate_numbers.append(texto.strip())
+                    if len(texto) >= 7 and "-" in texto:
+                            parts = texto.replace("\n", "").split("-")
+                            rigth = parts[1]  
+                            left = parts[0]  
+                            if len(rigth) == 2:
+                                 texto = left[-4:] + "-" + rigth
+                            elif len(rigth) == 3:
+                                 texto = left[-3:] + "-" + rigth
+                            plate_numbers.append(texto.strip())
         return plate_numbers
     
 class RegisterPlateView(generics.CreateAPIView):
