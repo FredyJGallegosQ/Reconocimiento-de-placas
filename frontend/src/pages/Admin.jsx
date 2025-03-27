@@ -5,7 +5,18 @@ import unsaac331 from "../assets/unsaac_331.png";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import LiveCamera from "../components/LiveCamera";
 import axios from "axios";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LabelList,
+} from "recharts";
 
 function Admin() {
   const [activeTab, setActiveTab] = useState("live");
@@ -15,22 +26,25 @@ function Admin() {
   const [registeredPlates, setRegisteredPlates] = useState([]);
   const [users, setUsers] = useState([]);
   const [plateRecords, setPlateRecords] = useState([]);
+  const [usageByRoleData, setUsageByRoleData] = useState([]);
+  const [topFrequentUsers, setTopFrequentUsers] = useState([]);
+  const [daysUsageData, setDaysUsageData] = useState([]);
 
   useEffect(() => {
     if (activeTab === "live") {
-      const startVideo = async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-          });
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
-        } catch (err) {
-          console.error("Error al acceder a la cámara", err);
-        }
-      };
-      startVideo();
+      // const startVideo = async () => {
+      //   try {
+      //     const stream = await navigator.mediaDevices.getUserMedia({
+      //       video: true,
+      //     });
+      //     if (videoRef.current) {
+      //       videoRef.current.srcObject = stream;
+      //     }
+      //   } catch (err) {
+      //     console.error("Error al acceder a la cámara", err);
+      //   }
+      // };
+      // startVideo();
       // Fetch plate records for today
       const fetchPlateRecordsToday = async () => {
         try {
@@ -50,13 +64,8 @@ function Admin() {
             const recordDate = new Date(record.recognized_at);
             const recordDateString = recordDate.toISOString().split("T")[0]; // Formato: YYYY-MM-DD
 
-            console.log("Registro:", record);
-            console.log("Fecha registrada:", recordDateString);
-            console.log("Hoy (today):", today);
-
             return recordDateString === today; // Comparación
           });
-          console.log("placas de hoy", recordsToday);
           setPlateRecords(recordsToday);
         } catch (error) {
           console.error(
@@ -132,6 +141,63 @@ function Admin() {
         }
       };
       fetchPlateRecords();
+    } else if (activeTab === "analysis") {
+      const fetchAnalysisData = async () => {
+        try {
+          const token = localStorage.getItem(ACCESS_TOKEN);
+
+          // Hacer solicitudes a cada endpoint
+          const [
+            daysUsageResponse,
+            usageByRoleResponse,
+            topFrequentUsersResponse,
+          ] = await Promise.all([
+            axios.get("http://localhost:8000/api/analysis/traffic-trends/", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              params: {
+                start_date: startDate,
+                end_date: endDate,
+                interval: "day", // O 'month' dependiendo de lo que necesitas
+              },
+            }),
+            axios.get("http://localhost:8000/api/analysis/frequency-by-type/", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              params: {
+                start_date: startDate,
+                end_date: endDate,
+              },
+            }),
+            axios.get(
+              "http://localhost:8000/api/analysis/top-frequent-users/",
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+                params: {
+                  start_date: startDate,
+                  end_date: endDate,
+                },
+              }
+            ),
+          ]);
+          // Procesar los datos de daysUsageResponse para formatear las fechas
+          const formattedDaysUsageData = daysUsageResponse.data.map((item) => ({
+            ...item,
+            day: new Date(item.day).toLocaleDateString("es-ES"), // Formatear la fecha
+          }));
+          // Establecer los datos obtenidos en el estado
+          setDaysUsageData(formattedDaysUsageData);
+          setUsageByRoleData(usageByRoleResponse.data);
+          setTopFrequentUsers(topFrequentUsersResponse.data);
+        } catch (error) {
+          console.error("Error al obtener datos del análisis", error);
+        }
+      };
+      fetchAnalysisData();
     }
   }, [activeTab]);
 
@@ -169,6 +235,9 @@ function Admin() {
                   ))}
                 </tbody>
               </table>
+              <button className="recognition-button" onClick={handleManualRecognition}>
+                Reconocer Placa Manualmente
+              </button>
             </div>
           </div>
         );
@@ -231,7 +300,9 @@ function Admin() {
                 onChange={(e) => setEndDate(e.target.value)}
               />
               <button onClick={handleFilter}>Filtrar</button>
-              <button className="export-button" onClick={handleExport}>Exportar</button>
+              <button className="export-button" onClick={handleExport}>
+                Exportar
+              </button>
             </div>
           </div>
         );
@@ -309,6 +380,80 @@ function Admin() {
             </div>
           </div>
         );
+      case "analysis":
+        return (
+          <div className="analysis-container">
+            {/* 2. Días con Mayor Uso */}
+            <div className="days-usage-section">
+              <h3>Días con Mayor Uso</h3>
+              <ResponsiveContainer width="100%" height={290}>
+                <BarChart data={daysUsageData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <YAxis />
+                  {/* <Tooltip /> */}
+                  {/* <Legend /> */}
+                  <Bar dataKey="count" fill="#82ca9d">
+                    <LabelList dataKey="day" position="center" angle={-60} style={{ fill: 'black', fontSize: '12px' }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* 3. Frecuencia de Uso por Cargo */}
+            <div className="usage-by-role-section">
+              <h3>Frecuencia de Uso por Cargo</h3>
+              <ResponsiveContainer width="100%" height={290}>
+                <BarChart data={usageByRoleData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  {/* <XAxis /> */}
+                  <YAxis />
+                  <Bar dataKey="count" fill="#ffc658">
+                    <LabelList dataKey="type" position="inside" style={{ fill: 'black', fontSize: '12px', fontWeight: 'bold' }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* 4. Top 15 Usuarios Frecuentes */}
+            <div className="top-frequent-users-section">
+              <h3>Top Usuarios Frecuentes</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nro</th>
+                    <th>Usuario</th>
+                    <th>Cargo</th>
+                    <th>Ingresos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topFrequentUsers.map((user, index) => (
+                    <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>{user.name}</td>
+                      <td>{user.type}</td>
+                      <td>{user.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="export-container">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+                <button onClick={handleFilter_analysis}>Filtrar</button>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -381,13 +526,94 @@ function Admin() {
       console.error("Error al obtener los registros filtrados", error);
     }
   };
-
+  const handleFilter_analysis = async () => {
+    try {
+      const token = localStorage.getItem(ACCESS_TOKEN);
+  
+      // Hacer solicitudes filtradas por fechas a todas las rutas de análisis
+      const [
+        daysUsageResponse,
+        usageByRoleResponse,
+        topFrequentUsersResponse,
+      ] = await Promise.all([
+        axios.get("http://localhost:8000/api/analysis/traffic-trends/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            start_date: startDate,
+            end_date: endDate,
+            interval: "day",
+          },
+        }),
+        axios.get("http://localhost:8000/api/analysis/frequency-by-type/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            start_date: startDate,
+            end_date: endDate,
+          },
+        }),
+        axios.get("http://localhost:8000/api/analysis/top-frequent-users/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            start_date: startDate,
+            end_date: endDate,
+          },
+        }),
+      ]);
+      // Procesar los datos de daysUsageResponse para formatear las fechas
+      const formattedDaysUsageData = daysUsageResponse.data.map((item) => ({
+        ...item,
+        day: new Date(item.day).toLocaleDateString("es-ES"), // Formatear la fecha
+      }));
+      // Actualizar los estados con los datos obtenidos
+      setDaysUsageData(formattedDaysUsageData);
+      setUsageByRoleData(usageByRoleResponse.data);
+      setTopFrequentUsers(topFrequentUsersResponse.data);
+    } catch (error) {
+      console.error("Error al obtener los registros filtrados", error);
+    }
+  };
+  
   const handleExport = () => {
     const ws = XLSX.utils.json_to_sheet(plateRecords);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Placas");
 
     XLSX.writeFile(wb, "placas.xlsx");
+  };
+  const handleManualRecognition = () => {
+    const video = document.querySelector("video");
+    if (!video) return;
+  
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+    canvas.toBlob((blob) => {
+      const formData = new FormData();
+      formData.append("frame", blob);
+  
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
+        "Content-Type": "multipart/form-data",
+      };
+  
+      axios
+        .post("http://localhost:8000/api/recognize_plate/", formData, { headers })
+        .then((response) => {
+          console.log("Placas reconocidas:", response.data.plate_numbers);
+        })
+        .catch((err) => {
+          console.error("Error en el reconocimiento manual:", err);
+        });
+    }, "image/jpeg");
   };
   return (
     <div>
@@ -432,6 +658,12 @@ function Admin() {
         </button>
         <button className="logout-button" onClick={handleRegister}>
           Registrar Personal
+        </button>
+        <button
+          className={activeTab === "analysis" ? "active-button" : ""}
+          onClick={() => setActiveTab("analysis")}
+        >
+          Análisis
         </button>
         <div className="logout-container">
           <button className="logout-button" onClick={handleLogout}>

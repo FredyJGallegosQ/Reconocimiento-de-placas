@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import RegisterView, LoginView, CustomTokenObtainPairView, PlateRecognitionView
 from .views import RegisterPlateView, RegisteredPlateListView, DeletePlateView, UserListView, UserDeleteView
-from .views import PlateRecognitionReportView
+from .views import PlateRecognitionReportView, FrequencyByTypeView, TopFrequentUsersView
+from .views import TrafficTrendsView
 
 
 urlpatterns = [
@@ -15,5 +16,7 @@ urlpatterns = [
     path('users/', UserListView.as_view(), name='user-list'),
     path('delete_user/<str:username>/', UserDeleteView.as_view(), name='user-delete'),
     path('plate_report/', PlateRecognitionReportView.as_view(), name='plate_report'),
-
+    path('analysis/frequency-by-type/', FrequencyByTypeView.as_view(), name='frequency-by-type'),
+    path('analysis/top-frequent-users/', TopFrequentUsersView.as_view(), name='top-frequent-users'),
+    path('analysis/traffic-trends/', TrafficTrendsView.as_view(), name='traffic-trends')
 ]

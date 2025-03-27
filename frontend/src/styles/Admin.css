@@ -219,6 +219,44 @@
   flex: 1;
   overflow-x: auto; /* Permite el desplazamiento horizontal si la tabla es ancha */
 }
+
+.analysis-container {
+  display: flex;          /* Usar Flexbox para alinear las secciones horizontalmente */
+  gap: 5px;               /* Espacio entre las columnas */
+  justify-content: space-between;
+}
+
+.analysis-container > div {
+  flex: 1;                /* Hacer que todas las columnas ocupen el mismo ancho */
+  height: 350px; 
+  width: 420px;         /* Altura de 300px para cada columna */
+  background-color: #f9f9f9; /* Fondo claro (opcional, puedes cambiarlo según tu diseño) */
+  padding: 10px;          /* Añadir algo de padding interno */
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);  /* Añadir una sombra ligera a las columnas */
+  border-radius: 5px;     /* Bordes redondeados (opcional) */
+  overflow: auto;         /* Para permitir el desplazamiento si el contenido es muy grande */
+}
+
+.analysis-container h3 {
+  margin-bottom: 15px;    /* Espacio entre el título y el contenido */
+  text-align: center;     /* Centrar el título en cada sección */
+}
+
+.analysis-container table {
+  width: 100%;  
+  height: 265px;          /* Asegura que la tabla ocupe todo el ancho disponible */
+  border-collapse: collapse; /* Eliminar el espacio entre las celdas */
+}
+
+.analysis-container th, td {
+  padding: 8px;           /* Espaciado interno en las celdas de la tabla */
+  text-align: left;       /* Alinear el texto a la izquierda */
+  border-bottom: 1px solid #ddd; /* Línea divisoria entre filas */
+}
+
+.analysis-container tr:nth-child(even) {
+  background-color: #f2f2f2; /* Alternar el color de las filas (opcional) */
+}
 /* footer */
 .footer {
   text-align: center;

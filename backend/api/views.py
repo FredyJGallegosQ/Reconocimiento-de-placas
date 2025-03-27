@@ -1,3 +1,4 @@
+import time
 from django.contrib.auth import authenticate, login
 from django.utils import timezone
 from datetime import timedelta
@@ -10,8 +11,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 import cv2
 import numpy as np
-import pytesseract
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+import easyocr
+import torch
+import pathlib
+from django.utils.dateparse import parse_datetime
+from django.db.models import Count
+from django.db.models.functions import TruncMonth, TruncDay
+
 
 class CreateUserView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -52,36 +58,46 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 class PlateRecognitionView(APIView):
     permission_classes = [AllowAny]
+    # Cargar YOLOv5 al iniciar la clase
+    pathlib.PosixPath = pathlib.WindowsPath
+    model = torch.hub.load('ultralytics/yolov5', 'custom', path='C:/Users/usuario/Desktop/Plan de tesis/PlateRecognition.pt')
 
     def post(self, request, *args, **kwargs):
         try:
+            # Recuperar el archivo de imagen enviado como 'frame'
             frame_file = request.FILES.get('frame')
             if not frame_file:
+                # Responder con un error si no se proporciona el frame
                 return Response({"error": "No frame provided"}, status=400)
 
+            # Leer el contenido del archivo y convertirlo en una imagen
             frame_data = frame_file.read()
             np_arr = np.frombuffer(frame_data, np.uint8)
             frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
             if frame is None:
+                # Responder con un error si no se puede decodificar la imagen
                 return Response({"error": "Failed to decode frame"}, status=400)
             
+            # Reconocer las placas en el frame
             plate_numbers = self.recognize_plate(frame)
-            print("Lista de placas -->", plate_numbers)
+            #print("Lista de placas -->", plate_numbers)
 
-            # Buscar placas registradas en la base de datos
+            # Consultar las placas reconocidas en la base de datos
             registered_plates = RegisteredPlate.objects.filter(plate_number__in=plate_numbers)
             registered_plate_dict = {plate.plate_number: plate for plate in registered_plates}
-            print("Placas registradas en la BD:", registered_plates)
-            print("Placas registradas dict:", registered_plate_dict)
+            # print("Placas registradas en la BD:", registered_plates)
+            # print("Placas registradas dict:", registered_plate_dict)
+           
             # Preparar la respuesta
             response_data = []
             for plate_number in plate_numbers:
                 if plate_number in registered_plate_dict:
-                    print("se encontró la placa en la BD")
+                   # print("se encontró la placa en la BD")
                     plate_info = registered_plate_dict[plate_number]
-                    print("Información de la placa --> ", plate_info.name)
-                    # Comprobar si la placa fue registrada en los últimos 5 minutos
+                    #print("Información de la placa --> ", plate_info.name)
+
+                    # Comprobar si la placa fue reconocida en los últimos 5 minutos
                     five_minutes_ago = timezone.now() - timedelta(minutes=5)
                     recent_record = PlateRecognitionRecord.objects.filter(
                         plate_number=plate_number,
@@ -89,7 +105,7 @@ class PlateRecognitionView(APIView):
                     ).exists()
 
                     if not recent_record:
-                        # Guardar la información en la base de datos
+                        # Registrar la placa en la base de datos si no fue reconocida recientemente
                         PlateRecognitionRecord.objects.create(
                             plate_number=plate_info.plate_number,
                             name=plate_info.name,
@@ -105,72 +121,54 @@ class PlateRecognitionView(APIView):
                     else:
                         print(f"La placa {plate_number} fue reconocida recientemente (últimos 5 minutos)")
 
-            print("Responde data --> ", response_data)
+            #print("Responde data --> ", response_data)
             if response_data:
+                # Responder con las placas reconocidas
                 return Response({"plate_numbers": response_data})
             else:
+                # Responder si no se encuentran placas registradas
                 return Response({"message": "No registered plates found"}, status=404)
 
         except Exception as e:
+            # Manejar errores y responder con el mensaje de error
             return Response({"error": str(e)}, status=400)
 
     def recognize_plate(self, frame):
         plate_numbers = []
-        # Aquí va tu código de reconocimiento de placa
-        # Ancho y alto de fotogramas
-        al, an, c = frame.shape
 
-        # Centro de la imagen
-        x1 = int(an / 4)
-        x2 = int(3 * an / 4)
+        # Obtener predicciones de YOLO
+        results = self.model(frame)  
+        detected_plates = results.pandas().xyxy[0]  # Obtener resultados en formato DataFrame
 
-        y1 = int(al / 1.5)
-        y2 = al
+        print(detected_plates)
+        for _, row in detected_plates.iterrows():
+            x1, y1, x2, y2, confidence, class_name = row[['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'name']]
+            if confidence < 0.5 or class_name != "placa":
+                continue  # Omitir detecciones no confiables  # Filtrar por confianza y categoría 'plate'
+                # Extraer la placa detectada
+            plate_img = frame[int(y1):int(y2), int(x1):int(x2)]
 
-        # Recorte de zona extraida
-        recorte = frame[y1:y2, x1:x2]
-
-        hsv_recorte = cv2.cvtColor(recorte, cv2.COLOR_BGR2HSV)
-
-        # Rango de colores para amarillo, blanco y celeste
-        masks = [
-            cv2.inRange(hsv_recorte, np.array([20, 100, 100]), np.array([30, 255, 255])), # Amarillo
-            cv2.inRange(hsv_recorte, np.array([0, 0, 200]), np.array([180, 25, 255])),   # Blanco
-            cv2.inRange(hsv_recorte, np.array([85, 100, 100]), np.array([95, 255, 255])) # Celeste
-        ]
-        
-        combined_mask = cv2.bitwise_or(masks[0], masks[1])
-        combined_mask = cv2.bitwise_or(combined_mask, masks[2])
-
-        contornos, _ = cv2.findContours(combined_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        contornos = sorted(contornos, key=lambda x: cv2.contourArea(x), reverse=True)
-
-        # Dibuja contorno extraido
-        for contorno in contornos:
-            area = cv2.contourArea(contorno)
-            if 200 < area < 5000:
-                x, y, ancho, alto = cv2.boundingRect(contorno)
-                xpi, ypi = x + x1, y + y1
-                xpf, ypf = x + ancho + x1, y + alto + y1
-                placa = frame[ypi:ypf, xpi:xpf]
-
-                if placa.shape[0] >= 30 and placa.shape[1] >= 50:
-                    kernel = np.ones((3, 3), np.uint8)
-                    plate_processed = cv2.dilate(placa, kernel, iterations=1)
-                    plate_processed = cv2.erode(plate_processed, kernel, iterations=1)
-                    gray_plate = cv2.cvtColor(plate_processed, cv2.COLOR_BGR2GRAY)
-
-                    custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789-'
-                    texto = pytesseract.image_to_string(gray_plate, config=custom_config)
-                    if len(texto) >= 7 and "-" in texto:
-                            parts = texto.replace("\n", "").split("-")
-                            rigth = parts[1]  
-                            left = parts[0]  
-                            if len(rigth) == 2:
-                                 texto = left[-4:] + "-" + rigth
-                            elif len(rigth) == 3:
-                                 texto = left[-3:] + "-" + rigth
-                            plate_numbers.append(texto.strip())
+            gray_plate = cv2.cvtColor(plate_img, cv2.COLOR_BGR2GRAY)
+            reader = easyocr.Reader(['en'], gpu=True) 
+            plate_text = reader.readtext(gray_plate, detail=0)
+            if not plate_text:
+                continue  # Si no hay texto, omitir
+            # Validar el formato de la placa
+            if "S" in plate_text[1]:
+                print("entro")
+                plate_text.append(plate_text[1].replace("S", "5"))
+                
+            print("==================================================================== ", plate_text)
+            for plate in plate_text:
+                if len(plate) >= 7 and "-" in plate:
+                    parts = plate.replace("\n", "").split("-")
+                    right = parts[1]  
+                    left = parts[0]  
+                    if len(right) == 2:
+                        plate = left[-4:] + "-" + right
+                    elif len(right) == 3:
+                        plate = left[-3:] + "-" + right
+                    plate_numbers.append(plate.strip())
         return plate_numbers
     
 class RegisterPlateView(generics.CreateAPIView):
@@ -220,3 +218,57 @@ class PlateRecognitionReportView(generics.ListAPIView):
     permission_classes = [AllowAny]
     queryset = PlateRecognitionRecord.objects.all()
     serializer_class = PlateRecognitionRecordSerializer
+
+class FrequencyByTypeView(generics.ListAPIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        if start_date and end_date:
+            records = PlateRecognitionRecord.objects.filter(
+                recognized_at__range=[parse_datetime(start_date), parse_datetime(end_date)]
+            )
+        else:
+            records = PlateRecognitionRecord.objects.all()
+
+        # Agrupar por tipo y contar ocurrencias
+        frequency_by_type = records.values('type').annotate(count=Count('id')).order_by('-count')
+
+        return Response(frequency_by_type)
+    
+class TopFrequentUsersView(generics.ListAPIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        if start_date and end_date:
+            records = PlateRecognitionRecord.objects.filter(
+                recognized_at__range=[parse_datetime(start_date), parse_datetime(end_date)]
+            )
+        else:
+            records = PlateRecognitionRecord.objects.all()
+
+        # Agrupar por placa y contar ocurrencias
+        top_users = records.values('plate_number', 'name', 'last_name', 'type').annotate(count=Count('id')).order_by('-count')[:15]
+
+        return Response(top_users)
+    
+class TrafficTrendsView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        interval = request.query_params.get('interval', 'day')  # Por defecto, intervalo diario
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        if start_date and end_date:
+            records = PlateRecognitionRecord.objects.filter(
+                recognized_at__range=[parse_datetime(start_date), parse_datetime(end_date)]
+            )
+        else:
+            records = PlateRecognitionRecord.objects.all()
+
+        if interval == 'month':
+            trends = records.annotate(month=TruncMonth('recognized_at')).values('month').annotate(count=Count('id')).order_by('month')
+        else:
+            trends = records.annotate(day=TruncDay('recognized_at')).values('day').annotate(count=Count('id')).order_by('day')
+
+        return Response(trends)

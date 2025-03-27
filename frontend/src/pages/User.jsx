@@ -12,19 +12,19 @@ function User() {
 
   useEffect(() => {
     if (activeTab === "live") {
-      const startVideo = async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-          });
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
-        } catch (err) {
-          console.error("Error al acceder a la cámara", err);
-        }
-      };
-      startVideo();
+      // const startVideo = async () => {
+      //   try {
+      //     const stream = await navigator.mediaDevices.getUserMedia({
+      //       video: true,
+      //     });
+      //     if (videoRef.current) {
+      //       videoRef.current.srcObject = stream;
+      //     }
+      //   } catch (err) {
+      //     console.error("Error al acceder a la cámara", err);
+      //   }
+      // };
+      // startVideo();
       // Fetch plate records for today
       const fetchPlateRecordsToday = async () => {
         try {
@@ -50,7 +50,7 @@ function User() {
 
             return recordDateString === today; // Comparación
           });
-          console.log("placas de oy", recordsToday);
+          console.log("placas de hoy", recordsToday);
           setPlateRecords(recordsToday);
         } catch (error) {
           console.error(
@@ -102,6 +102,9 @@ function User() {
                   ))}
                 </tbody>
               </table>
+              <button className="recognition-button" onClick={handleManualRecognition}>
+                Reconocer Placa Manualmente
+              </button>
             </div>
           </div>
         );
@@ -116,6 +119,35 @@ function User() {
     localStorage.removeItem(REFRESH_TOKEN);
     // Aquí puedes agregar la lógica de cierre de sesión, como limpiar el estado o redirigir al login
     window.location.href = "/login";
+  };
+  const handleManualRecognition = () => {
+    const video = document.querySelector("video");
+    if (!video) return;
+  
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+    canvas.toBlob((blob) => {
+      const formData = new FormData();
+      formData.append("frame", blob);
+  
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN)}`,
+        "Content-Type": "multipart/form-data",
+      };
+  
+      axios
+        .post("http://localhost:8000/api/recognize_plate/", formData, { headers })
+        .then((response) => {
+          console.log("Placas reconocidas:", response.data.plate_numbers);
+        })
+        .catch((err) => {
+          console.error("Error en el reconocimiento manual:", err);
+        });
+    }, "image/jpeg");
   };
   return (
     <div>
@@ -144,6 +176,9 @@ function User() {
         </div>
       </nav>
       <div className="container">{renderContent()}</div>
+      <button className="recognition-button" onClick={handleManualRecognition}>
+        Reconocer Placa Manualmente
+      </button>
       <footer className="footer">
         <p>© 2024 UNSAAC. Todos los derechos reservados.</p>
       </footer>

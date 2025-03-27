@@ -45,9 +45,10 @@ const LiveCamera = () => {
         'Content-Type': 'multipart/form-data',
       };
 
-      axios.post('/api/recognize_plate/', formData, { headers })
+      axios.post('http://localhost:8000/api/recognize_plate/', formData, { headers })
         .then(response => {
           const plates = response.data.plate_numbers; // Obtener la lista de placas
+          
           // onPlatesRecognized(plates);
           // setRecognizedPlates(prevPlates => [...prevPlates, ...plates]); // Agregar nuevas placas a la lista existente
         })
@@ -61,10 +62,10 @@ const LiveCamera = () => {
     }, 'image/jpeg');
   };
 
-  useEffect(() => {
-    const intervalId = setInterval(captureFrameAndSend, 100); // Capturar y enviar un frame cada 0.1 segundos
-    return () => clearInterval(intervalId);
-  }, []);
+  // useEffect(() => {
+  //   const intervalId = setInterval(captureFrameAndSend, 1000); // Capturar y enviar un frame cada 0.1 segundos
+  //   return () => clearInterval(intervalId);
+  // }, []);
 
   return (
     <div>
