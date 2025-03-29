@@ -60,7 +60,7 @@ class PlateRecognitionView(APIView):
     permission_classes = [AllowAny]
     # Cargar YOLOv5 al iniciar la clase
     pathlib.PosixPath = pathlib.WindowsPath
-    model = torch.hub.load('ultralytics/yolov5', 'custom', path='C:/Users/usuario/Desktop/Plan de tesis/PlateRecognition.pt')
+    model = torch.hub.load('ultralytics/yolov5', 'custom', path='C:/Users/usuario/Desktop/Plan de tesis/Software/PlateRecognition.pt')
 
     def post(self, request, *args, **kwargs):
         try:

@@ -76,10 +76,10 @@ function Admin() {
       };
       fetchPlateRecordsToday();
       // Configura el intervalo para actualizar cada segundo
-      const intervalId = setInterval(fetchPlateRecordsToday, 1000);
+      //const intervalId = setInterval(fetchPlateRecordsToday, 1000);
 
       // Limpieza del intervalo al desmontar el componente o cambiar de pestaña
-      return () => clearInterval(intervalId);
+      //return () => clearInterval(intervalId);
     } else if (activeTab === "registered_plates") {
       const fetchRegisteredPlates = async () => {
         try {
@@ -211,7 +211,13 @@ function Admin() {
               <LiveCamera />
             </div>
             <div className="table-box">
+              <div>
+                <button className="recognition-button" onClick={handleManualRecognition}>
+                  Reconocer Placa Manualmente
+                </button>
+              </div>
               <table>
+                
                 <thead>
                   <tr>
                     <th>Nro</th>
@@ -234,11 +240,10 @@ function Admin() {
                     </tr>
                   ))}
                 </tbody>
+                
               </table>
-              <button className="recognition-button" onClick={handleManualRecognition}>
-                Reconocer Placa Manualmente
-              </button>
-            </div>
+              
+            </div>              
           </div>
         );
       case "report":
@@ -609,10 +614,31 @@ function Admin() {
         .post("http://localhost:8000/api/recognize_plate/", formData, { headers })
         .then((response) => {
           console.log("Placas reconocidas:", response.data.plate_numbers);
+
+          // 🔹 Llamar directamente a la API de registros después del reconocimiento
+          return axios.get("http://localhost:8000/api/plate_report/", { headers });
+        })
+        .then((response) => {
+          console.log("Registros de placas:", response.data);
+
+          // Filtrar los registros por la fecha actual
+          const today = new Date().toISOString().split("T")[0]; // Formato: YYYY-MM-DD
+          const recordsToday = response.data.filter((record) => {
+            const recordDate = new Date(record.recognized_at);
+            const recordDateString = recordDate.toISOString().split("T")[0]; // Formato: YYYY-MM-DD
+
+            return recordDateString === today; // Comparación de fecha
+          });
+
+          console.log("Registros de hoy:", recordsToday);
+
+          // 🔹 Aquí puedes actualizar el estado si lo necesitas
+          setPlateRecords(recordsToday);
         })
         .catch((err) => {
           console.error("Error en el reconocimiento manual:", err);
         });
+      
     }, "image/jpeg");
   };
   return (
@@ -672,6 +698,7 @@ function Admin() {
         </div>
       </nav>
       <div className="container">{renderContent()}</div>
+      
       <footer className="footer">
         <p>© 2024 UNSAAC. Todos los derechos reservados.</p>
       </footer>
